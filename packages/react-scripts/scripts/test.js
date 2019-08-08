@@ -66,7 +66,29 @@ if (
 
 // @remove-on-eject-begin
 // This is not necessary after eject because we embed config into package.json.
-const createJestConfig = require('./utils/createJestConfig');
+const oldCreateJestConfig = require('./utils/createJestConfig');
+
+// Map React's testing classes to Preact
+const createJestConfig = function () {
+  const config = oldCreateJestConfig.apply(this, arguments);
+  config.moduleNameMapper = Object.assign({}, config.moduleNameMapper, {
+    '^react-dom/server$': '<rootDir>/node_modules/preact-render-to-string/dist/index.js',
+    '^react-dom/test-utils$': '<rootDir>/node_modules/preact-test-utils/lib/index.js',
+    '^react-dom$': '<rootDir>/node_modules/preact-compat-enzyme/lib/index.js',
+    '^react-test-renderer/shallow$': '<rootDir>/node_modules/preact-test-utils/lib/index.js',
+    '^react-test-renderer$': '<rootDir>/node_modules/preact-test-utils/lib/index.js',
+    '^react-addons-test-utils$': '<rootDir>/node_modules/preact-test-utils/lib/index.js',
+    '^react$': '<rootDir>/node_modules/preact-compat-enzyme/lib/index.js'
+  });
+  return config;
+};
+
+// HACK ALERT!
+const packageJson = require('../package.json');
+module.constructor._cache[
+  require.resolve(packageJson.name + '/scripts/utils/createJestConfig')
+].exports = createJestConfig;
+
 const path = require('path');
 const paths = require('../config/paths');
 argv.push(
